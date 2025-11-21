@@ -4,9 +4,18 @@
  * This generated file contains a sample Kotlin library project to get you started.
  * For more details on building Java & JVM projects, please refer to https://docs.gradle.org/9.1.0/userguide/building_java_projects.html in the Gradle documentation.
  */
+import java.security.MessageDigest
+
 group = "io.github.skoogjacob"
+
 version = "0.1.0"
+
 description = "test library, testing a FOSS license combo"
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
 
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
@@ -16,11 +25,7 @@ plugins {
     `java-library`
     // publish to maven
     `maven-publish`
-}
-
-repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenCentral()
+    signing
 }
 
 dependencies {
@@ -41,43 +46,100 @@ dependencies {
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
-java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
-
-tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    withSourcesJar()
+    withJavadocJar()
 }
+
 publishing {
     publications {
-        create<MavenPublication>("mavenKotlin") {
+        create<MavenPublication>("mavenJava") {
+            artifactId = "license-test"
             from(components["java"])
+
             pom {
-                name = "License test library"
-                description = "this package is meant to test license combos"
+                name.set("io.github.skoogjacob:license-test")
+                description.set(project.description)
+                url.set("https://skoogjacob.github.io/")
+
+                // ─────────────── LICENSES ───────────────
                 licenses {
                     license {
-                        name = "GPL-3.0-only"
-                        url = "https://opensource.org/licenses/gpl-3-0"
-                        distribution = "repo"
+                        name.set("GNU General Public License v3.0 only")
+                        url.set("https://www.gnu.org/licenses/gpl-3.0.html")
                     }
                     license {
-                        name = "NTP"
-                        url = "https://opensource.org/license/ntp-license-php"
-                        distribution = "repo"
+                        name.set("NTP License")
+                        url.set("https://opensource.org/licenses/NTP")
                     }
                 }
+
+                // ─────────────── DEVELOPER ───────────────
                 developers {
                     developer {
-                        name = "Jacob Skoog"
-                        email = "jacob.skoog@pm.me"
-                        organization = "github.io"
-                        organizationUrl = "https://skoogjacob.github.io/"
+                        name.set("Jacob Skoog")
+                        email.set("jacob.skoog@pm.me")
+                        organization.set("skoogjacob")
+                        organizationUrl.set("https://skoogjacob.github.io/")
                     }
                 }
-                scm {
 
+                // ─────────────── SCM ───────────────
+                scm {
+                    connection.set("scm:git:https://github.com/YOUR_GITHUB_REPO.git")
+                    developerConnection.set("scm:git:https://github.com/YOUR_GITHUB_REPO.git")
+                    url.set("https://github.com/YOUR_GITHUB_REPO")
                 }
             }
         }
     }
 }
+
+tasks.named<Test>("test") {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}
+
+signing {
+    val keyId = findProperty("signing.keyId") as String?
+    val keyPassword = findProperty("signing.password") as String?
+    val keyFilePath = findProperty("signing.secretKeyFile") as String?
+    val keyFile = keyFilePath?.let { File(it) }
+    if (keyFile != null && keyFile.exists()) {
+        val keyText = keyFile.readText(Charsets.UTF_8)
+        useInMemoryPgpKeys(keyId, keyText, keyPassword)
+        logger.lifecycle("Using in-memory PGP key from $keyFilePath")
+    } else {
+        logger.warn("No signing key found at $keyFilePath, using system gpg as fallback")
+        useGpgCmd()
+    }
+    sign(publishing.publications["mavenJava"])
+}
+
+tasks.register("generateChecksums") {
+    val publicationDir = layout.buildDirectory.dir("publications/mavenJava")
+    outputs.dir(publicationDir)
+    doLast {
+        val pubDir = publicationDir.get().asFile
+        pubDir.walkTopDown()
+                .filter {
+                    it.isFile &&
+                            !it.name.endsWith(".asc") &&
+                            !it.name.endsWith(".sha1") &&
+                            !it.name.endsWith(".md5")
+                }
+                .forEach { file ->
+                    val bytes = file.readBytes()
+                    fun digest(algorithm: String): String {
+                        val md = MessageDigest.getInstance(algorithm)
+                        val hash = md.digest(bytes)
+                        return hash.joinToString("") { b -> "%02x".format(b) }
+                    }
+                    file.resolveSibling("${file.name}.sha1").writeText(digest("SHA-1"))
+                    file.resolveSibling("${file.name}.md5").writeText(digest("MD5"))
+                }
+    }
+}
+
+tasks.named("publishToMavenLocal") { finalizedBy("generateChecksums") }

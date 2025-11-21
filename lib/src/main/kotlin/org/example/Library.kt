@@ -8,7 +8,7 @@ class Library {
         return true
     }
 
-    fun addNums(a Int, b Int): Int {
-            return a + b
+    fun addNums(a: Int, b: Int): Int {
+        return a + b
     }
 }
