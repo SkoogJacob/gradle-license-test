@@ -8,7 +8,7 @@ import java.security.MessageDigest
 
 group = "io.github.skoogjacob"
 
-version = "0.1.0"
+version = "0.2.0"
 
 description = "test library, testing a FOSS license combo"
 
@@ -47,7 +47,7 @@ dependencies {
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
-    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    toolchain { languageVersion = JavaLanguageVersion.of(17) }
     withSourcesJar()
     withJavadocJar()
 }
@@ -66,12 +66,20 @@ publishing {
                 // ─────────────── LICENSES ───────────────
                 licenses {
                     license {
-                        name.set("GNU General Public License v3.0 only")
-                        url.set("https://www.gnu.org/licenses/gpl-3.0.html")
+                        name.set("QPL-1.0")
+                        url.set("https://opensource.org/license/qpl-1-0")
                     }
                     license {
-                        name.set("NTP License")
-                        url.set("https://opensource.org/licenses/NTP")
+                        name.set("Frameworx-1.0")
+                        url.set("https://opensource.org/license/frameworx-php")
+                    }
+                    license {
+                        name.set("MirOS")
+                        url.set("https://opensource.org/license/miros-html")
+                    }
+                    license {
+                        name.set("OFL-1.1")
+                        url.set("https://opensource.org/license/ofl-1-1")
                     }
                 }
 
@@ -87,9 +95,9 @@ publishing {
 
                 // ─────────────── SCM ───────────────
                 scm {
-                    connection.set("scm:git:https://github.com/YOUR_GITHUB_REPO.git")
-                    developerConnection.set("scm:git:https://github.com/YOUR_GITHUB_REPO.git")
-                    url.set("https://github.com/YOUR_GITHUB_REPO")
+                    connection.set("scm:git:https://github.com/SkoogJacob/gradle-license-test.git")
+                    developerConnection.set("scm:git:https://github.com/SkoogJacob/gradle-license-test.git")
+                    url.set("https://github.com/SkoogJacob/gradle-license-test")
                 }
             }
         }
